@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitHub Integrations - devsquad</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="docs-layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">dev<span>squad</span></div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">Getting Started</div>
+          <a href="index.html" class="nav-link">Introduction</a>
+          <a href="architecture.html" class="nav-link">Architecture</a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Reference</div>
+          <a href="cli.html" class="nav-link">CLI Reference</a>
+          <a href="config.html" class="nav-link">Configuration</a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Features</div>
+          <a href="feature-project.html" class="nav-link">Project Management</a>
+          <a href="feature-daemon.html" class="nav-link">Daemon & Background</a>
+          <a href="feature-agent.html" class="nav-link">Agent Management</a>
+          <a href="feature-github.html" class="nav-link active">GitHub Integrations</a>
+          <a href="feature-doctor.html" class="nav-link">Health & Diagnostics</a>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <h1>GitHub Integrations</h1>
+
+      <p>devsquad integrates with GitHub to sync tasks and project state. This includes creating issues, linking to GitHub Projects, and synchronizing status updates.</p>
+
+      <h2>Task Briefs</h2>
+
+      <p>Use <code>devsquad task brief</code> to scaffold pre-filled task briefs based on agent roles. This generates structured Markdown briefs that guide agents on their specific tasks.</p>
+
+      <h3>Creating a Task Brief</h3>
+
+      <div class="code-block-wrapper">
+        <pre><code># Generate a task brief for a Developer role
+devsquad task brief --role developer --task "Implement user authentication"
+
+# Save to a file
+devsquad task brief --role developer --task "Implement user authentication" --output task.md
+
+# Create with GitHub Issue (requires gh CLI authentication)
+devsquad task brief --role developer --task "Implement user authentication" --title "User Authentication Feature"</code></pre>
+        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+      </div>
+
+      <h2>Supported Roles</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Role</th>
+            <th>Agents</th>
+            <th>Skills</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>developer</td>
+            <td>agent-claude-dev, agent-minimax-dev</td>
+            <td>clean-code, typescript-expert</td>
+          </tr>
+          <tr>
+            <td>tech-lead</td>
+            <td>agent-claude-lead</td>
+            <td>code-review-excellence, architecture</td>
+          </tr>
+          <tr>
+            <td>architect</td>
+            <td>agent-gemini-architect</td>
+            <td>architecture, domain-driven-design</td>
+          </tr>
+          <tr>
+            <td>manager</td>
+            <td>agent-gemini-manager</td>
+            <td>planning-with-files, concise-planning</td>
+          </tr>
+          <tr>
+            <td>qa</td>
+            <td>agent-gemini-qa</td>
+            <td>testing-patterns, documentation</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>GitHub Issue Creation</h2>
+
+      <p>When authenticated via the <code>gh</code> CLI, the <code>task brief</code> command can automatically:</p>
+
+      <ol>
+        <li>Create a GitHub Issue with the task brief as the body</li>
+        <li>Link the issue to your repository's Project board</li>
+      </ol>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">Warning</div>
+        <p>GitHub Issue creation is fail-open — if it fails (e.g., no auth, network error), the task brief is still generated but the issue is skipped without blocking the workflow.</p>
+      </div>
+
+      <h2>Project Initialization with GitHub</h2>
+
+      <p>When running <code>devsquad project init</code>, you can link to GitHub:</p>
+
+      <div class="code-block-wrapper">
+        <pre><code># With GitHub repo
+devsquad project init --name my-feature --repo owner/repo
+
+# Skip GitHub integration
+devsquad project init --name my-feature --local-only</code></pre>
+        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+      </div>
+
+      <h3>GitHub Projects Integration</h3>
+
+      <p>During project initialization, if authenticated with <code>gh</code>:</p>
+
+      <ol>
+        <li>The CLI detects the repository from git remote</li>
+        <li>Prompts to select a GitHub Project (or skips if none)</li>
+        <li>Links the project for status synchronization</li>
+      </ol>
+
+      <h2>Status Synchronization</h2>
+
+      <p>When agents update their status (via <code>devsquad project agent</code>), the status can sync to:</p>
+
+      <ul>
+        <li>Slack status messages in the project channel</li>
+        <li>GitHub Project board items (when linked)</li>
+      </ul>
+
+      <h2>Authentication</h2>
+
+      <p>Ensure your <code>gh</code> CLI is authenticated before using GitHub features:</p>
+
+      <div class="code-block-wrapper">
+        <pre><code># Check authentication status
+gh auth status
+
+# Authenticate if needed
+gh auth login</code></pre>
+        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    function copyCode(button) {
+      const pre = button.parentElement.querySelector('code');
+      const text = pre.textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        button.textContent = 'Copied!';
+        setTimeout(() => {
+          button.textContent = 'Copy';
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

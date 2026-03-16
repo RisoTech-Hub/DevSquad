@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daemon & Background Processes - devsquad</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="docs-layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">dev<span>squad</span></div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">Getting Started</div>
+          <a href="index.html" class="nav-link">Introduction</a>
+          <a href="architecture.html" class="nav-link">Architecture</a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Reference</div>
+          <a href="cli.html" class="nav-link">CLI Reference</a>
+          <a href="config.html" class="nav-link">Configuration</a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Features</div>
+          <a href="feature-project.html" class="nav-link">Project Management</a>
+          <a href="feature-daemon.html" class="nav-link active">Daemon & Background</a>
+          <a href="feature-agent.html" class="nav-link">Agent Management</a>
+          <a href="feature-github.html" class="nav-link">GitHub Integrations</a>
+          <a href="feature-doctor.html" class="nav-link">Health & Diagnostics</a>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <h1>Daemon & Background Processes</h1>
+
+      <p>The daemon system is the backbone of devsquad, enabling reliable message routing between Slack and your local development environment. It uses macOS <code>launchd</code> (LaunchAgents) to ensure persistence across reboots and automatic restart on failure.</p>
+
+      <h2>Daemon Types</h2>
+
+      <h3>SlackListenerDaemon</h3>
+
+      <p>A single global process that:</p>
+      <ul>
+        <li>Opens a WebSocket connection to Slack via Socket Mode</li>
+        <li>Receives all messages from all project channels</li>
+        <li>Identifies the target project based on the channel ID</li>
+        <li>Pushes the payload to Redis for processing</li>
+      </ul>
+
+      <h3>MessageProcessorDaemon</h3>
+
+      <p>One process per project that:</p>
+      <ul>
+        <li>Pops messages from the project's specific Redis queue</li>
+        <li>Formats the message for the tmux session</li>
+        <li>Injects the message using <code>tmux send-keys</code></li>
+      </ul>
+
+      <h2>Daemon Management</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Command</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>devsquad daemon start</code></td>
+            <td>Start listener and all project processors</td>
+          </tr>
+          <tr>
+            <td><code>devsquad daemon start --name &lt;project&gt;</code></td>
+            <td>Start processor for a specific project (also starts listener if needed)</td>
+          </tr>
+          <tr>
+            <td><code>devsquad daemon stop</code></td>
+            <td>Stop all daemons</td>
+          </tr>
+          <tr>
+            <td><code>devsquad daemon stop --name &lt;project&gt;</code></td>
+            <td>Stop processor for a specific project only</td>
+          </tr>
+          <tr>
+            <td><code>devsquad daemon restart</code></td>
+            <td>Restart all daemons</td>
+          </tr>
+          <tr>
+            <td><code>devsquad daemon restart --name &lt;project&gt;</code></td>
+            <td>Restart processor for a specific project</td>
+          </tr>
+          <tr>
+            <td><code>devsquad daemon status</code></td>
+            <td>Show PID and load status for all daemons</td>
+          </tr>
+          <tr>
+            <td><code>devsquad daemon logs</code></td>
+            <td>Tail listener logs</td>
+          </tr>
+          <tr>
+            <td><code>devsquad daemon logs --name &lt;project&gt;</code></td>
+            <td>Tail processor logs for a specific project</td>
+          </tr>
+          <tr>
+            <td><code>devsquad daemon remove</code></td>
+            <td>Remove all daemon plists</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>LaunchAgent Configuration</h2>
+
+      <p>The <code>LaunchDaemonManager</code> generates <code>.plist</code> files in <code>~/Library/LaunchAgents/</code>:</p>
+
+      <h3>Listener Plist</h3>
+      <p><code>com.devsquad.listener</code> — Runs the WebSocket receiver (single global instance)</p>
+
+      <h3>Processor Plist</h3>
+      <p><code>com.devsquad.processor.{projectName}</code> — Dedicated tmux injector instances (one per project)</p>
+
+      <div class="callout callout-note">
+        <div class="callout-title">Note</div>
+        <p>All plists set <code>KeepAlive: false</code>, giving the <code>devsquad</code> CLI absolute authority to manage daemon lifecycle rather than the OS unexpectedly reviving broken processes.</p>
+      </div>
+
+      <h2>Message Flow</h2>
+
+      <div class="callout callout-note">
+        <div class="callout-title">See Also</div>
+        <p>See the <a href="architecture.html">Architecture</a> page for a detailed sequence diagram of the message flow from Slack to the Claude Orchestrator.</p>
+      </div>
+
+      <h2>Troubleshooting</h2>
+
+      <p>If messages stop flowing:</p>
+
+      <ol>
+        <li>Check daemon status: <code>devsquad daemon status</code></li>
+        <li>Review logs: <code>devsquad daemon logs</code></li>
+        <li>Run diagnostics: <code>devsquad doctor</code></li>
+      </ol>
+    </main>
+  </div>
+
+  <script>
+    function copyCode(button) {
+      const pre = button.parentElement.querySelector('code');
+      const text = pre.textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        button.textContent = 'Copied!';
+        setTimeout(() => {
+          button.textContent = 'Copy';
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

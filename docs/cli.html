@@ -3,161 +3,342 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>devsquad Documentation - CLI Commands</title>
-  <style>
-    :root { --bg-light: #f9fafb; --bg-white: #ffffff; --text-main: #374151; --text-muted: #6b7280; --primary: #2563eb; --sidebar-bg: #111827; --sidebar-text: #e5e7eb; --sidebar-hover: #374151; --code-bg: #1f2937; --code-text: #e5e7eb; --border: #e5e7eb; }
-    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg-light); color: var(--text-main); display: flex; min-height: 100vh; }
-    .sidebar { width: 250px; background: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column; position: fixed; height: 100vh; overflow-y: auto; }
-    .sidebar-header { padding: 20px; font-size: 1.5rem; font-weight: bold; border-bottom: 1px solid var(--sidebar-hover); color: white; }
-    .nav-links { display: flex; flex-direction: column; padding: 10px 0; }
-    .nav-links a { color: var(--sidebar-text); text-decoration: none; padding: 12px 20px; transition: 0.2s; }
-    .nav-links a:hover, .nav-links a.active { background: var(--sidebar-hover); color: white; }
-    .main-content { margin-left: 250px; padding: 40px; flex: 1; max-width: 1000px; }
-    .card { background: var(--bg-white); border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 24px; border: 1px solid var(--border); overflow-x: auto; }
-    h1, h2 { color: #111827; margin-top: 0; }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-    th, td { border: 1px solid var(--border); padding: 12px; text-align: left; }
-    th { background: #f9fafb; font-weight: 600; white-space: nowrap; }
-    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; background: #f3f4f6; padding: 2px 4px; border-radius: 4px; color: #b91c1c; }
-  </style>
+  <title>CLI Reference - devsquad</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="sidebar">
-    <div class="sidebar-header">devsquad</div>
-    <div class="nav-links">
-      <a href="index.html">Overview</a>
-      <a href="architecture.html">Architecture</a>
-      <a href="data-flow.html">Data Flow</a>
-      <a href="cli.html" class="active">CLI Commands</a>
-      <a href="api.html">API / Interfaces</a>
-      <a href="config.html">Configuration</a>
-    </div>
-  </div>
-  <div class="main-content">
-    <div class="card">
-      <h1>CLI Commands Reference</h1>
+  <div class="docs-layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">dev<span>squad</span></div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">Getting Started</div>
+          <a href="index.html" class="nav-link">Introduction</a>
+          <a href="architecture.html" class="nav-link">Architecture</a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Reference</div>
+          <a href="cli.html" class="nav-link active">CLI Reference</a>
+          <a href="config.html" class="nav-link">Configuration</a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Features</div>
+          <a href="feature-project.html" class="nav-link">Project Management</a>
+          <a href="feature-daemon.html" class="nav-link">Daemon & Background</a>
+          <a href="feature-agent.html" class="nav-link">Agent Management</a>
+          <a href="feature-github.html" class="nav-link">GitHub Integrations</a>
+          <a href="feature-doctor.html" class="nav-link">Health & Diagnostics</a>
+        </div>
+      </nav>
+    </aside>
 
-      <h2>General</h2>
+    <main class="main-content">
+      <h1>CLI Reference</h1>
+
+      <p>The <code>devsquad</code> CLI exposes commands for managing every aspect of your agentic workflows.</p>
+
+      <h2>Global Options</h2>
+
       <table>
-        <tr>
-          <th>Command</th>
-          <th>Description</th>
-        </tr>
-        <tr>
-          <td><code>devsquad config</code></td>
-          <td>Interactive configuration setup. Prompts for <code>slack_app_token</code> and <code>slack_bot_token</code>. Non-interactive mode accepts flags.</td>
-        </tr>
+        <thead>
+          <tr>
+            <th>Option</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>-V, --version</code></td>
+            <td>Output the version number</td>
+          </tr>
+          <tr>
+            <td><code>-h, --help</code></td>
+            <td>Display help for command</td>
+          </tr>
+        </tbody>
       </table>
 
-      <h2>Daemon Management</h2>
+      <h2>Configuration <span class="badge badge-cli">config</span></h2>
+
+      <p>View or set devsquad configurations like Slack tokens.</p>
+
       <table>
-        <tr>
-          <th>Command</th>
-          <th>Description</th>
-        </tr>
-        <tr>
-          <td><code>devsquad daemon start</code></td>
-          <td>Kills stale listener processes, loads LaunchAgent <code>com.devsquad.listener</code>, and starts project message processors.</td>
-        </tr>
-        <tr>
-          <td><code>devsquad daemon stop</code></td>
-          <td>Unloads listener LaunchAgent and all registered project processor LaunchAgents.</td>
-        </tr>
-        <tr>
-          <td><code>devsquad daemon restart</code></td>
-          <td>Performs a stop followed by a start sequence.</td>
-        </tr>
-        <tr>
-          <td><code>devsquad daemon remove</code></td>
-          <td>Removes LaunchAgent plists from disk.</td>
-        </tr>
-        <tr>
-          <td><code>devsquad daemon status</code></td>
-          <td>Queries <code>launchctl list</code> for listener/processors. Reports PID and exit codes.</td>
-        </tr>
-        <tr>
-          <td><code>devsquad daemon logs [--project &lt;name&gt;]</code></td>
-          <td>Tails listener log. Provide <code>--project</code> to tail a specific processor log.</td>
-        </tr>
+        <thead>
+          <tr>
+            <th>Command</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>devsquad config</code></td>
+            <td>Interactive configuration setup. Prompts for Slack tokens.</td>
+          </tr>
+          <tr>
+            <td><code>devsquad config --bot-token &lt;token&gt;</code></td>
+            <td>Set Slack Bot Token (xoxb-...)</td>
+          </tr>
+          <tr>
+            <td><code>devsquad config --app-token &lt;token&gt;</code></td>
+            <td>Set Slack App Token (xoxa-...)</td>
+          </tr>
+          <tr>
+            <td><code>devsquad config --view</code></td>
+            <td>View current configuration</td>
+          </tr>
+          <tr>
+            <td><code>devsquad config --set &lt;key=value&gt;</code></td>
+            <td>Set a config key (e.g. --set protocol_base=/path)</td>
+          </tr>
+        </tbody>
       </table>
 
-      <h2>Project Management</h2>
+      <h2>Project Management <span class="badge badge-cli">project</span></h2>
+
+      <p>Manage the lifecycle of a Slack channel ↔ tmux session mapping.</p>
+
       <table>
-        <tr>
-          <th>Command</th>
-          <th>Description</th>
-        </tr>
-        <tr>
-          <td><code>devsquad project init</code></td>
-          <td>Creates Slack channel, invites core members, launches tmux session with Claude CLI, registers project, and starts processor daemon.</td>
-        </tr>
-        <tr>
-          <td><code>devsquad project list</code></td>
-          <td>Lists all registered projects with their channel and tmux details.</td>
-        </tr>
-        <tr>
-          <td><code>devsquad project update</code></td>
-          <td>Updates project phase/task in the Slack status message. Used primarily by AI orchestrators.</td>
-        </tr>
-        <tr>
-          <td><code>devsquad project agent</code></td>
-          <td>Updates a specific agent's status in the project status message.</td>
-        </tr>
-        <tr>
-          <td><code>devsquad project stop</code></td>
-          <td>Gracefully terminates tmux session (<code>q\n</code>), marks status Offline, and stops the processor daemon.</td>
-        </tr>
-        <tr>
-          <td><code>devsquad project resume</code></td>
-          <td>Restarts tmux session with <code>--resume</code>, restarts processor daemon, updates status.</td>
-        </tr>
-        <tr>
-          <td><code>devsquad project add</code></td>
-          <td>Manually registers an existing channel + tmux session as a project.</td>
-        </tr>
-        <tr>
-          <td><code>devsquad project remove</code></td>
-          <td>Removes project, archives channel, kills tmux session, removes processor daemon.</td>
-        </tr>
-        <tr>
-          <td><code>devsquad project config</code></td>
-          <td>Shows current configuration for a given project.</td>
-        </tr>
+        <thead>
+          <tr>
+            <th>Command</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>devsquad project init</code></td>
+            <td>Create Slack channel, start tmux, install daemon. Flags: <code>--name</code>, <code>--users</code>, <code>--repo</code>, <code>--local-only</code></td>
+          </tr>
+          <tr>
+            <td><code>devsquad project stop</code></td>
+            <td>Gracefully exit Claude session and kill tmux</td>
+          </tr>
+          <tr>
+            <td><code>devsquad project resume</code></td>
+            <td>Restart tmux session and processor daemon</td>
+          </tr>
+          <tr>
+            <td><code>devsquad project list</code></td>
+            <td>List all registered projects</td>
+          </tr>
+          <tr>
+            <td><code>devsquad project update</code></td>
+            <td>Internal command used by orchestrator to update status/phase</td>
+          </tr>
+          <tr>
+            <td><code>devsquad project agent</code></td>
+            <td>Update agent status in project status message</td>
+          </tr>
+          <tr>
+            <td><code>devsquad project add</code></td>
+            <td>Manually register a project</td>
+          </tr>
+          <tr>
+            <td><code>devsquad project remove</code></td>
+            <td>Remove a project and clean up resources</td>
+          </tr>
+          <tr>
+            <td><code>devsquad project config</code></td>
+            <td>Show config and state for a project</td>
+          </tr>
+          <tr>
+            <td><code>devsquad project set-mode</code></td>
+            <td>Set project gate mode (autonomous or supervised)</td>
+          </tr>
+        </tbody>
       </table>
 
-      <h2>Slack Operations</h2>
+      <h2>Background Daemons <span class="badge badge-daemon">daemon</span></h2>
+
+      <p>Manage the LaunchAgents that bridge Slack to local processes.</p>
+
       <table>
-        <tr>
-          <th>Command</th>
-          <th>Description</th>
-        </tr>
-        <tr>
-          <td><code>devsquad slack send "&lt;message&gt;"</code></td>
-          <td>Posts a message to the project's channel. Returns message timestamp.</td>
-        </tr>
-        <tr>
-          <td><code>devsquad slack reply &lt;ts&gt; "&lt;message&gt;"</code></td>
-          <td>Posts a threaded reply to an existing message using its timestamp (<code>ts</code>).</td>
-        </tr>
+        <thead>
+          <tr>
+            <th>Command</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>devsquad daemon start</code></td>
+            <td>Start listener and processors</td>
+          </tr>
+          <tr>
+            <td><code>devsquad daemon stop</code></td>
+            <td>Stop listener and processors</td>
+          </tr>
+          <tr>
+            <td><code>devsquad daemon restart</code></td>
+            <td>Restart listener and processors</td>
+          </tr>
+          <tr>
+            <td><code>devsquad daemon remove</code></td>
+            <td>Remove daemon plists</td>
+          </tr>
+          <tr>
+            <td><code>devsquad daemon status</code></td>
+            <td>Show PID and load status</td>
+          </tr>
+          <tr>
+            <td><code>devsquad daemon logs</code></td>
+            <td>Tail daemon logs. Flag: <code>--name &lt;project&gt;</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Agent Registry <span class="badge badge-cli">agent</span></h2>
+
+      <p>Manage the <code>agents.json</code> registry of your AI team.</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Command</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>devsquad agent list</code></td>
+            <td>List all registered agents</td>
+          </tr>
+          <tr>
+            <td><code>devsquad agent add</code></td>
+            <td>Register a new agent. Flags: <code>--name</code>, <code>--role</code>, <code>--model</code>, <code>--container</code>, <code>--skills</code></td>
+          </tr>
+          <tr>
+            <td><code>devsquad agent show &lt;name&gt;</code></td>
+            <td>Show full details for an agent</td>
+          </tr>
+          <tr>
+            <td><code>devsquad agent remove &lt;name&gt;</code></td>
+            <td>Remove an agent from the registry</td>
+          </tr>
+          <tr>
+            <td><code>devsquad agent init</code></td>
+            <td>Seed agents.json with default team agents</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Slack Operations <span class="badge badge-cli">slack</span></h2>
+
+      <p>Send messages to Slack channels.</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Command</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>devsquad slack send &lt;message&gt;</code></td>
+            <td>Send a message to a channel</td>
+          </tr>
+          <tr>
+            <td><code>devsquad slack reply &lt;threadTs&gt; &lt;message&gt;</code></td>
+            <td>Reply to a thread</td>
+          </tr>
+          <tr>
+            <td><code>devsquad slack react &lt;ts&gt; &lt;emoji&gt;</code></td>
+            <td>Add a reaction to a message</td>
+          </tr>
+          <tr>
+            <td><code>devsquad slack unreact &lt;ts&gt; &lt;emoji&gt;</code></td>
+            <td>Remove a reaction from a message</td>
+          </tr>
+          <tr>
+            <td><code>devsquad slack upload &lt;filepath&gt;</code></td>
+            <td>Upload a file to a channel</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>GitHub Integration <span class="badge badge-cli">task</span></h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Command</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>devsquad task brief --role &lt;role&gt;</code></td>
+            <td>Scaffold a pre-filled task brief skeleton. Flags: <code>--role</code>, <code>--task</code>, <code>--output</code>, <code>--title</code>, <code>--local-only</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>System Health <span class="badge badge-cli">doctor</span></h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Command</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>devsquad doctor</code></td>
+            <td>Run diagnostics on configuration, tokens, daemons, and tmux</td>
+          </tr>
+          <tr>
+            <td><code>devsquad doctor --fix</code></td>
+            <td>Automatically repair fixable issues</td>
+          </tr>
+        </tbody>
       </table>
 
       <h2>Internal Commands</h2>
-      <p style="color: var(--text-muted); font-size: 0.9rem;">These commands are spawned automatically by LaunchAgents and should not be run directly.</p>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">Warning</div>
+        <p>These commands are spawned automatically by LaunchAgents and should not be run directly.</p>
+      </div>
+
       <table>
-        <tr>
-          <th>Command</th>
-          <th>Description</th>
-        </tr>
-        <tr>
-          <td><code>devsquad _run-listener</code></td>
-          <td>Executes <code>SlackListenerDaemon</code> to fetch from WebSocket.</td>
-        </tr>
-        <tr>
-          <td><code>devsquad _run-processor &lt;project&gt;</code></td>
-          <td>Executes <code>MessageProcessorDaemon</code> for a specific project.</td>
-        </tr>
+        <thead>
+          <tr>
+            <th>Command</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>devsquad _run-listener</code></td>
+            <td>Internal: run the Slack listener process (used by LaunchAgent)</td>
+          </tr>
+          <tr>
+            <td><code>devsquad _run-processor &lt;project&gt;</code></td>
+            <td>Internal: run the message processor for a project (used by LaunchAgent)</td>
+          </tr>
+        </tbody>
       </table>
-    </div>
+    </main>
   </div>
+
+  <script>
+    function copyCode(button) {
+      const pre = button.parentElement.querySelector('code');
+      const text = pre.textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        button.textContent = 'Copied!';
+        setTimeout(() => {
+          button.textContent = 'Copy';
+        }, 2000);
+      });
+    }
+  </script>
 </body>
 </html>

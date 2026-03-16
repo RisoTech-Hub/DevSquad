@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Management - devsquad</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="docs-layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">dev<span>squad</span></div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">Getting Started</div>
+          <a href="index.html" class="nav-link">Introduction</a>
+          <a href="architecture.html" class="nav-link">Architecture</a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Reference</div>
+          <a href="cli.html" class="nav-link">CLI Reference</a>
+          <a href="config.html" class="nav-link">Configuration</a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Features</div>
+          <a href="feature-project.html" class="nav-link">Project Management</a>
+          <a href="feature-daemon.html" class="nav-link">Daemon & Background</a>
+          <a href="feature-agent.html" class="nav-link active">Agent Management</a>
+          <a href="feature-github.html" class="nav-link">GitHub Integrations</a>
+          <a href="feature-doctor.html" class="nav-link">Health & Diagnostics</a>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <h1>Agent Management</h1>
+
+      <p>Agents are the simulated AI team members that collaborate in the tmux session. Each agent has a specific role (Tech Lead, Developer, QA, etc.) and is powered by an underlying model.</p>
+
+      <h2>Agent Registry</h2>
+
+      <p>The agent registry is stored in <code>~/.devsquad/agents.json</code> and defines:</p>
+
+      <ul>
+        <li><strong>Name:</strong> Unique identifier for the agent</li>
+        <li><strong>Role:</strong> Team role (Developer, Tech Lead, Architect, etc.)</li>
+        <li><strong>Model:</strong> Underlying AI model (e.g., claude-sonnet-4-6)</li>
+        <li><strong>Container:</strong> Optional Docker container name for isolation</li>
+        <li><strong>Skills:</strong> List of skills for task routing</li>
+      </ul>
+
+      <h2>Default Agents</h2>
+
+      <p>When you first set up devsquad, you can initialize a default team:</p>
+
+      <div class="code-block-wrapper">
+        <pre><code># Initialize with default agents
+devsquad agent init</code></pre>
+        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+      </div>
+
+      <h2>Managing Agents</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Command</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>devsquad agent list</code></td>
+            <td>List all registered agents</td>
+          </tr>
+          <tr>
+            <td><code>devsquad agent show &lt;name&gt;</code></td>
+            <td>Show full details for an agent</td>
+          </tr>
+          <tr>
+            <td><code>devsquad agent add</code></td>
+            <td>Register a new agent</td>
+          </tr>
+          <tr>
+            <td><code>devsquad agent remove &lt;name&gt;</code></td>
+            <td>Remove an agent from the registry</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Adding Custom Agents</h2>
+
+      <div class="code-block-wrapper">
+        <pre><code># Add a new agent with required options
+devsquad agent add --name agent-claude-dev --role "Developer" --model claude-sonnet-4-6
+
+# Add agent with container and skills
+devsquad agent add --name agent-minimax-dev --role "Developer" --model minimax --container dev-container --skills clean-code,typescript-expert</code></pre>
+        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+      </div>
+
+      <h2>Agent Roles</h2>
+
+      <p>devsquad supports several predefined roles for task routing:</p>
+
+      <ul>
+        <li><strong>Developer</strong> — Code implementation tasks</li>
+        <li><strong>Tech Lead</strong> — Architecture and code review</li>
+        <li><strong>Architect</strong> — System design and domain modeling</li>
+        <li><strong>Manager</strong> — Project planning and coordination</li>
+        <li><strong>QA Engineer</strong> — Testing and quality assurance</li>
+      </ul>
+
+      <h2>Skills</h2>
+
+      <p>Skills are used to route tasks to the appropriate agent. Each skill represents a specialized capability:</p>
+
+      <ul>
+        <li><code>clean-code</code> — Code quality and readability</li>
+        <li><code>typescript-expert</code> — TypeScript type safety</li>
+        <li><code>code-review-excellence</code> — Code review standards</li>
+        <li><code>architecture</code> — System structure design</li>
+        <li><code>domain-driven-design</code> — Business domain modeling</li>
+        <li><code>planning-with-files</code> — Version-controlled planning</li>
+        <li><code>concise-planning</code> — Minimal overhead planning</li>
+        <li><code>testing-patterns</code> — Test structure patterns</li>
+        <li><code>documentation</code> — Technical documentation</li>
+      </ul>
+
+      <div class="callout callout-note">
+        <div class="callout-title">Note</div>
+        <p>When creating task briefs using <code>devsquad task brief</code>, the appropriate skills are automatically included based on the agent role.</p>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    function copyCode(button) {
+      const pre = button.parentElement.querySelector('code');
+      const text = pre.textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        button.textContent = 'Copied!';
+        setTimeout(() => {
+          button.textContent = 'Copy';
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

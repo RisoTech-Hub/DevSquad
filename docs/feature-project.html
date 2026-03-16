@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Management - devsquad</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="docs-layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">dev<span>squad</span></div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">Getting Started</div>
+          <a href="index.html" class="nav-link">Introduction</a>
+          <a href="architecture.html" class="nav-link">Architecture</a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Reference</div>
+          <a href="cli.html" class="nav-link">CLI Reference</a>
+          <a href="config.html" class="nav-link">Configuration</a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Features</div>
+          <a href="feature-project.html" class="nav-link active">Project Management</a>
+          <a href="feature-daemon.html" class="nav-link">Daemon & Background</a>
+          <a href="feature-agent.html" class="nav-link">Agent Management</a>
+          <a href="feature-github.html" class="nav-link">GitHub Integrations</a>
+          <a href="feature-doctor.html" class="nav-link">Health & Diagnostics</a>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <h1>Project Management</h1>
+
+      <p>A project in devsquad is the binding agent between your local codebase, a tmux session, and a Slack channel. It serves as the central coordination point for your AI development team.</p>
+
+      <h2>What Happens During <code>project init</code></h2>
+
+      <p>When you run <code>devsquad project init</code>, the CLI performs a multi-step setup:</p>
+
+      <ol>
+        <li><strong>Creates a Slack channel</strong> using the Slack API</li>
+        <li><strong>Invites required users</strong> based on <code>--users</code> flag or <code>DEV_SQUAD_CORE_MEMBERS</code> env var</li>
+        <li><strong>Generates a unique <code>claudeSessionId</code></strong> for session tracking</li>
+        <li><strong>Spawns a background <code>tmux</code> session</strong> named after the project</li>
+        <li><strong>Installs and starts a specific <code>MessageProcessorDaemon</code></strong> for this project</li>
+        <li><strong>Optionally links to GitHub</strong> if the <code>gh</code> CLI is authenticated</li>
+      </ol>
+
+      <h2>Project Lifecycle</h2>
+
+      <h3>Initialization</h3>
+
+      <div class="code-block-wrapper">
+        <pre><code># Initialize a new project
+devsquad project init --name my-feature
+
+# With specific users
+devsquad project init --name my-feature --users U123,U456
+
+# With GitHub repo
+devsquad project init --name my-feature --repo owner/repo
+
+# Skip GitHub integration
+devsquad project init --name my-feature --local-only</code></pre>
+        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+      </div>
+
+      <h3>Stopping a Project</h3>
+
+      <p>Gracefully stops the Claude session and cleans up resources:</p>
+
+      <div class="code-block-wrapper">
+        <pre><code># Stop a project
+devsquad project stop --name my-feature</code></pre>
+        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+      </div>
+
+      <h3>Resuming a Project</h3>
+
+      <p>Restarts the tmux session and processor daemon:</p>
+
+      <div class="code-block-wrapper">
+        <pre><code># Resume a stopped project
+devsquad project resume --name my-feature</code></pre>
+        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+      </div>
+
+      <h2>Project Status Phases</h2>
+
+      <p>Projects track their current state through phases displayed in Slack:</p>
+
+      <ul>
+        <li><strong>Listening</strong> — Waiting for user input</li>
+        <li><strong>Planning</strong> — Analyzing the request</li>
+        <li><strong>Delegating</strong> — Assigning tasks to agents</li>
+        <li><strong>Waiting</strong> — For agent responses</li>
+        <li><strong>Reporting</strong> — Summarizing results</li>
+        <li><strong>Offline</strong> — Project stopped</li>
+        <li><strong>Crashed</strong> — Unexpected error</li>
+      </ul>
+
+      <h2>Gate Modes</h2>
+
+      <p>Projects can operate in two modes:</p>
+
+      <ul>
+        <li><strong>autonomous</strong> — Agents can act without human approval</li>
+        <li><strong>supervised</strong> — Requires human approval for certain actions</li>
+      </ul>
+
+      <div class="code-block-wrapper">
+        <pre><code># Set project mode
+devsquad project set-mode --name my-feature --mode autonomous</code></pre>
+        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+      </div>
+
+      <h2>Managing Projects</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Command</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>devsquad project list</code></td>
+            <td>List all registered projects</td>
+          </tr>
+          <tr>
+            <td><code>devsquad project config --name &lt;project&gt;</code></td>
+            <td>Show config and state for a project</td>
+          </tr>
+          <tr>
+            <td><code>devsquad project remove --name &lt;project&gt;</code></td>
+            <td>Remove a project and clean up all resources</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Internal Commands</h2>
+
+      <p>The orchestrator uses these internal commands to update project state:</p>
+
+      <h3><code>project update</code></h3>
+
+      <p>Updates orchestrator phase and/or current task:</p>
+
+      <div class="code-block-wrapper">
+        <pre><code># Update phase
+devsquad project update --name my-feature --phase Delegating
+
+# Update task
+devsquad project update --name my-feature --task "Implementing login"
+
+# Batch update from stdin
+echo '{"phase":"Delegating","task":"...","agents":{"agent-name":"Working"}}' | devsquad project update --name my-feature --batch</code></pre>
+        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+      </div>
+
+      <h3><code>project agent</code></h3>
+
+      <p>Updates individual agent status:</p>
+
+      <div class="code-block-wrapper">
+        <pre><code>devsquad project agent --name my-feature --agent agent-claude-dev --status Working</code></pre>
+        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    function copyCode(button) {
+      const pre = button.parentElement.querySelector('code');
+      const text = pre.textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        button.textContent = 'Copied!';
+        setTimeout(() => {
+          button.textContent = 'Copy';
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

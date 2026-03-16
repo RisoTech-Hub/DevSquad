@@ -3,199 +3,114 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>devsquad Documentation - Overview</title>
-  <style>
-    :root {
-      --bg-light: #f9fafb;
-      --bg-white: #ffffff;
-      --text-main: #374151;
-      --text-muted: #6b7280;
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
-      --sidebar-bg: #111827;
-      --sidebar-text: #e5e7eb;
-      --sidebar-hover: #374151;
-      --code-bg: #1f2937;
-      --code-text: #e5e7eb;
-      --border: #e5e7eb;
-    }
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--bg-light);
-      color: var(--text-main);
-      display: flex;
-      min-height: 100vh;
-    }
-    .sidebar {
-      width: 250px;
-      background-color: var(--sidebar-bg);
-      color: var(--sidebar-text);
-      display: flex;
-      flex-direction: column;
-      position: fixed;
-      height: 100vh;
-      overflow-y: auto;
-    }
-    .sidebar-header {
-      padding: 20px;
-      font-size: 1.5rem;
-      font-weight: bold;
-      border-bottom: 1px solid var(--sidebar-hover);
-      color: white;
-    }
-    .nav-links {
-      display: flex;
-      flex-direction: column;
-      padding: 10px 0;
-    }
-    .nav-links a {
-      color: var(--sidebar-text);
-      text-decoration: none;
-      padding: 12px 20px;
-      transition: background-color 0.2s;
-    }
-    .nav-links a:hover, .nav-links a.active {
-      background-color: var(--sidebar-hover);
-      color: white;
-    }
-    .main-content {
-      margin-left: 250px;
-      padding: 40px;
-      flex: 1;
-      max-width: 1000px;
-    }
-    .card {
-      background: var(--bg-white);
-      border-radius: 8px;
-      padding: 24px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      margin-bottom: 24px;
-      border: 1px solid var(--border);
-    }
-    h1, h2, h3, h4 {
-      color: #111827;
-      margin-top: 0;
-    }
-    h1 {
-      font-size: 2.2rem;
-      margin-bottom: 16px;
-    }
-    h2 {
-      font-size: 1.5rem;
-      margin-top: 32px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--border);
-    }
-    p {
-      line-height: 1.6;
-      color: var(--text-main);
-    }
-    pre {
-      background-color: var(--code-bg);
-      color: var(--code-text);
-      padding: 16px;
-      border-radius: 6px;
-      overflow-x: auto;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 0.9rem;
-      line-height: 1.5;
-    }
-    code {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      background-color: #f3f4f6;
-      padding: 2px 4px;
-      border-radius: 4px;
-      font-size: 0.9em;
-      color: #b91c1c;
-    }
-    pre code {
-      background-color: transparent;
-      padding: 0;
-      color: inherit;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px 0;
-    }
-    th, td {
-      border: 1px solid var(--border);
-      padding: 12px;
-      text-align: left;
-    }
-    th {
-      background-color: #f9fafb;
-      font-weight: 600;
-    }
-    tr:nth-child(even) {
-      background-color: #f9fafb;
-    }
-    .badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 9999px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      background-color: var(--primary);
-      color: white;
-      margin-right: 8px;
-      margin-bottom: 8px;
-    }
-    .badge.ts { background-color: #3178c6; }
-    .badge.node { background-color: #339933; }
-    .badge.slack { background-color: #4a154b; }
-    .badge.redis { background-color: #dc382d; }
-    .badge.tmux { background-color: #1bb91f; }
-  </style>
+  <title>Welcome to devsquad</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="sidebar">
-    <div class="sidebar-header">devsquad</div>
-    <div class="nav-links">
-      <a href="index.html" class="active">Overview</a>
-      <a href="architecture.html">Architecture</a>
-      <a href="data-flow.html">Data Flow</a>
-      <a href="cli.html">CLI Commands</a>
-      <a href="api.html">API / Interfaces</a>
-      <a href="config.html">Configuration</a>
-    </div>
-  </div>
-  <div class="main-content">
-    <div class="card">
-      <h1>devsquad</h1>
-      <p style="font-size: 1.2rem; color: var(--text-muted);">A CLI tool bridging Slack with Claude Orchestrator sessions.</p>
-      
-      <div style="margin-top: 20px; margin-bottom: 20px;">
-        <span class="badge ts">TypeScript</span>
-        <span class="badge node">Node.js</span>
-        <span class="badge slack">Slack Socket Mode</span>
-        <span class="badge redis">Redis</span>
-        <span class="badge tmux">tmux</span>
+  <div class="docs-layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">dev<span>squad</span></div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">Getting Started</div>
+          <a href="index.html" class="nav-link active">Introduction</a>
+          <a href="architecture.html" class="nav-link">Architecture</a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Reference</div>
+          <a href="cli.html" class="nav-link">CLI Reference</a>
+          <a href="config.html" class="nav-link">Configuration</a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Features</div>
+          <a href="feature-project.html" class="nav-link">Project Management</a>
+          <a href="feature-daemon.html" class="nav-link">Daemon & Background</a>
+          <a href="feature-agent.html" class="nav-link">Agent Management</a>
+          <a href="feature-github.html" class="nav-link">GitHub Integrations</a>
+          <a href="feature-doctor.html" class="nav-link">Health & Diagnostics</a>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <h1>Welcome to devsquad</h1>
+
+      <p>devsquad is a CLI tool that bridges Slack with Claude Orchestrator multi-agent sessions. It allows you to run AI development teams locally inside <code>tmux</code> sessions while communicating with them directly through Slack.</p>
+
+      <p>With devsquad, you can:</p>
+      <ul>
+        <li>Create dedicated Slack channels mapped to local tmux sessions</li>
+        <li>Run Claude Orchestrator in the background and interact via Slack</li>
+        <li>Manage multiple AI agent teams working on different projects</li>
+        <li>Integrate with GitHub for task tracking and project management</li>
+        <li>Diagnose and fix issues with built-in health checks</li>
+      </ul>
+
+      <h2>Quick Start</h2>
+
+      <p>Initialize a new devsquad project inside any local repository. This creates a dedicated Slack channel, starts a background tmux session for the Claude Orchestrator, and wires everything together.</p>
+
+      <div class="code-block-wrapper">
+        <pre><code># Install devsquad globally
+npm install -g devsquad
+
+# Inside your working directory
+devsquad project init --name my-feature</code></pre>
+        <button class="copy-button" onclick="copyCode(this)">Copy</button>
       </div>
 
-      <p>
-        <strong>devsquad</strong> enables development teams to interact seamlessly with AI agents through Slack messages. By listening to Slack via Socket Mode, devsquad reliably routes messages through Redis queues and injects them directly into local tmux sessions running the Claude CLI.
-      </p>
+      <div class="callout callout-note">
+        <div class="callout-title">Note</div>
+        <p>Before running <code>devsquad project init</code>, make sure you have configured your Slack tokens using <code>devsquad config</code>. See the <a href="config.html">Configuration</a> guide for details.</p>
+      </div>
 
-      <h2>Quick Summary</h2>
+      <h2>Key Concepts</h2>
+
+      <h3>Projects</h3>
+      <p>A project is a mapping between:</p>
       <ul>
-        <li><strong>Seamless AI Interaction:</strong> Chat with AI orchestrator agents directly from a Slack project channel.</li>
-        <li><strong>Resilient Message Queuing:</strong> Uses Redis to queue messages between Slack listeners and tmux processors.</li>
-        <li><strong>State Persistence:</strong> Capable of resuming sessions, crashing/restarting daemons without losing queued commands.</li>
-        <li><strong>Robust Daemon Management:</strong> Integrates with macOS LaunchAgents to persist background listeners and processor daemons.</li>
-        <li><strong>Status Tracking:</strong> Real-time status reporting for individual projects and the AI team container infrastructure.</li>
+        <li>A local directory (your codebase)</li>
+        <li>A tmux session running the Claude Orchestrator</li>
+        <li>A dedicated Slack channel</li>
       </ul>
 
-      <h2>Documentation Navigation</h2>
+      <h3>Daemons</h3>
+      <p>Background processes that bridge Slack events to your local development environment:</p>
       <ul>
-        <li><a href="architecture.html">Architecture</a>: Dive into the Layered & DDD-lite design patterns.</li>
-        <li><a href="data-flow.html">Data Flow</a>: Understand how messages move from Slack to the Claude CLI.</li>
-        <li><a href="cli.html">CLI Commands Reference</a>: Full table of <code>devsquad</code> commands.</li>
-        <li><a href="api.html">API / Interfaces</a>: Core domain interfaces and application services.</li>
-        <li><a href="config.html">Configuration</a>: Detailed breakdown of the ~/.devsquad state and configurations.</li>
+        <li><strong>Listener Daemon:</strong> Captures all Slack events via Socket Mode</li>
+        <li><strong>Processor Daemon:</strong> Queues messages and injects them into tmux sessions</li>
       </ul>
-    </div>
+
+      <h3>Agents</h3>
+      <p>The simulated AI team members that collaborate in the tmux session. Each agent has a specific role (Tech Lead, Developer, QA, etc.) and is powered by an underlying model.</p>
+
+      <h2>Next Steps</h2>
+      <p>Now that you understand the basics, explore these resources:</p>
+      <ul>
+        <li><a href="architecture.html">Architecture & Data Flow</a> - Understand how the pieces fit together</li>
+        <li><a href="cli.html">CLI Reference</a> - Full command documentation</li>
+        <li><a href="config.html">Configuration</a> - Set up Slack tokens and preferences</li>
+        <li><a href="feature-project.html">Project Management</a> - Learn about project lifecycle</li>
+      </ul>
+    </main>
   </div>
+
+  <script>
+    function copyCode(button) {
+      const pre = button.parentElement.querySelector('code');
+      const text = pre.textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        button.textContent = 'Copied!';
+        setTimeout(() => {
+          button.textContent = 'Copy';
+        }, 2000);
+      });
+    }
+  </script>
 </body>
 </html>

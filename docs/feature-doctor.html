@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Health & Diagnostics - devsquad</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="docs-layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">dev<span>squad</span></div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">Getting Started</div>
+          <a href="index.html" class="nav-link">Introduction</a>
+          <a href="architecture.html" class="nav-link">Architecture</a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Reference</div>
+          <a href="cli.html" class="nav-link">CLI Reference</a>
+          <a href="config.html" class="nav-link">Configuration</a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Features</div>
+          <a href="feature-project.html" class="nav-link">Project Management</a>
+          <a href="feature-daemon.html" class="nav-link">Daemon & Background</a>
+          <a href="feature-agent.html" class="nav-link">Agent Management</a>
+          <a href="feature-github.html" class="nav-link">GitHub Integrations</a>
+          <a href="feature-doctor.html" class="nav-link active">Health & Diagnostics</a>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <h1>Health & Diagnostics</h1>
+
+      <p>If messages stop flowing or sessions drop, use <code>devsquad doctor</code> to diagnose and repair your devsquad environment. The doctor runs a comprehensive suite of checks to identify and fix common issues.</p>
+
+      <h2>Running Diagnostics</h2>
+
+      <div class="code-block-wrapper">
+        <pre><code># Run diagnostics
+devsquad doctor
+
+# Run diagnostics for a specific project
+devsquad doctor --name my-feature
+
+# Auto-fix issues
+devsquad doctor --fix</code></pre>
+        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+      </div>
+
+      <h2>Diagnostic Checks</h2>
+
+      <p>The doctor performs checks in three categories:</p>
+
+      <h3>Global Checks</h3>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Check</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Config File</td>
+            <td>Verifies <code>~/.devsquad/config.json</code> exists and is valid JSON</td>
+          </tr>
+          <tr>
+            <td>Slack Tokens</td>
+            <td>Validates Slack App and Bot tokens are configured</td>
+          </tr>
+          <tr>
+            <td>Agents File</td>
+            <td>Verifies <code>~/.devsquad/agents.json</code> exists</td>
+          </tr>
+          <tr>
+            <td>Listener Plist</td>
+            <td>Checks the listener LaunchAgent plist file exists</td>
+          </tr>
+          <tr>
+            <td>Listener State</td>
+            <td>Verifies the listener process state</td>
+          </tr>
+          <tr>
+            <td>Stale Listeners</td>
+            <td>Detects stale or zombie listener processes</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Project Checks</h3>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Check</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Project Exists</td>
+            <td>Verifies project is registered in projects.json</td>
+          </tr>
+          <tr>
+            <td>Tmux Session</td>
+            <td>Checks if the tmux session is running</td>
+          </tr>
+          <tr>
+            <td>Processor Plist</td>
+            <td>Verifies the processor LaunchAgent plist exists</td>
+          </tr>
+          <tr>
+            <td>Processor State</td>
+            <td>Checks if the processor daemon is running</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Workspace Checks</h3>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Check</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Git Repository</td>
+            <td>Verifies the workspace is a git repository</td>
+          </tr>
+          <tr>
+            <td>Git Remote</td>
+            <td>Checks for configured git remote origin</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Auto-Fix Mode</h2>
+
+      <p>Passing the <code>--fix</code> flag enables automatic repairs:</p>
+
+      <ul>
+        <li>Creates missing config files</li>
+        <li>Kills zombie listener processes</li>
+        <li>Reloads crashed daemons</li>
+        <li>Restores missing plist files</li>
+      </ul>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">Warning</div>
+        <p>Auto-fix will modify system state including killing processes and reloading LaunchAgents. Review the output carefully before running with <code>--fix</code>.</p>
+      </div>
+
+      <h2>Common Issues</h2>
+
+      <h3>Messages not reaching the agent</h3>
+      <ol>
+        <li>Run <code>devsquad daemon status</code> to check daemon health</li>
+        <li>Run <code>devsquad doctor</code> to identify issues</li>
+        <li>Try <code>devsquad daemon restart</code></li>
+      </ol>
+
+      <h3>Tmux session not found</h3>
+      <ol>
+        <li>Run <code>devsquad project resume --name &lt;project&gt;</code></li>
+        <li>Check the project is registered: <code>devsquad project list</code></li>
+      </ol>
+
+      <h3>Slack authentication errors</h3>
+      <ol>
+        <li>Run <code>devsquad config --view</code> to check tokens</li>
+        <li>Update tokens with <code>devsquad config --bot-token ... --app-token ...</code></li>
+      </ol>
+    </main>
+  </div>
+
+  <script>
+    function copyCode(button) {
+      const pre = button.parentElement.querySelector('code');
+      const text = pre.textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        button.textContent = 'Copied!';
+        setTimeout(() => {
+          button.textContent = 'Copy';
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>
