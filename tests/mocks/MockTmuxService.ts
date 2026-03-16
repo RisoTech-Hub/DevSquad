@@ -1,4 +1,4 @@
-import type { ITmuxService, TmuxTarget } from '../../src/domain/tmux';
+import type { ITmuxService, TmuxTarget } from '../../src/shared/domain/tmux';
 
 export class MockTmuxService implements ITmuxService {
   sent: { target: TmuxTarget; message: string }[] = [];

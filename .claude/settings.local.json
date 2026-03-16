@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(tmux list-sessions:*)",
+      "Bash(npm test:*)",
+      "Bash(devsquad --version)",
+      "Read(//Users/binn/.nvm/versions/node/v24.13.0/lib/node_modules/devsquad/bin/**)",
+      "Bash(node -e \"const { SocketModeClient } = require\\(''@slack/socket-mode''\\); console.log\\(typeof SocketModeClient\\); const c = new SocketModeClient\\({ appToken: ''xapp-test'' }\\); console.log\\(''events:'', c.eventNames ? c.eventNames\\(\\) : ''n/a''\\); console.log\\(''methods:'', Object.getOwnPropertyNames\\(Object.getPrototypeOf\\(c\\)\\).filter\\(m => !m.startsWith\\(''_''\\)\\).join\\('', ''\\)\\)\")",
+      "Bash(ps -eo pid,lstart,args)",
+      "Bash(tmux ls:*)",
+      "Bash(npx tsc:*)"
+    ]
+  }
+}

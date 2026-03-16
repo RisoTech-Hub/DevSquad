@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { TmuxService } from '../../src/infra/tmux/TmuxService';
+import { TmuxService } from '../../src/shared/infra/tmux/TmuxService';
 
 vi.mock('child_process', () => ({
   exec: vi.fn(),

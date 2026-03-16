@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ProjectStatusService } from '../../src/application/project/ProjectStatusService';
-import { SlackService } from '../../src/application/slack/SlackService';
+import { ProjectStatusService } from '../../src/features/project/application/ProjectStatusService';
+import { SlackService } from '../../src/features/slack/application/SlackService';
 import { MockSlackClient } from '../mocks/MockSlackClient';
 import { MockSlackSocket } from '../mocks/MockSlackSocket';
-import { DEFAULT_AGENTS } from '../../src/application/agent/AgentRegistryService';
-import { getProjectStatusPath } from '../../src/utils/paths';
-import type { ProjectConfig } from '../../src/application/project/ProjectService';
+import { DEFAULT_AGENTS } from '../../src/features/agent/application/AgentRegistryService';
+import { getProjectStatusPath } from '../../src/shared/utils/paths';
+import type { ProjectConfig } from '../../src/features/project/application/ProjectService';
 
 // ── fs mock ───────────────────────────────────────────────────────────────────
 

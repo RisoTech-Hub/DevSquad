@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { LaunchDaemonManager } from '../../src/infra/launchdaemon/LaunchDaemonManager';
+import { LaunchDaemonManager } from '../../src/features/daemon/infra/LaunchDaemonManager';
 
 const mockFs = vi.hoisted(() => ({
   mkdir: vi.fn().mockResolvedValue(undefined),

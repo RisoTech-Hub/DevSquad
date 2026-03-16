@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { RedisService } from '../../src/infra/redis/RedisService';
+import { RedisService } from '../../src/shared/infra/redis/RedisService';
 
 const mockRedis = {
   rpush: vi.fn(),

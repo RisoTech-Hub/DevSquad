@@ -1,4 +1,4 @@
-import { ISlackSocket, IncomingSlackMessage, MessageHandler } from '../../src/domain/slack';
+import { ISlackSocket, IncomingSlackMessage, MessageHandler } from '../../src/features/slack/domain';
 
 export class MockSlackSocket implements ISlackSocket {
   private handler: MessageHandler | null = null;

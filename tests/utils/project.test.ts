@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { resolveProjectName } from '../../src/utils/project';
-import type { ProjectConfig } from '../../src/application/project/ProjectService';
+import { resolveProjectName } from '../../src/features/project/utils/project';
+import type { ProjectConfig } from '../../src/features/project/application/ProjectService';
 
 const projects: ProjectConfig[] = [
   { name: 'my-project',    channelId: 'C1', tmuxSession: 's', tmuxWindow: 'w' },

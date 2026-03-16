@@ -1,14 +1,12 @@
 import { Command } from 'commander';
-import { ensureConfig } from './utils/config';
-import { configCommand } from './commands/config';
-import { daemonCommand } from './commands/daemon';
-import { projectCommand } from './commands/project';
-import { runListenerCommand } from './commands/run-listener';
-import { runProcessorCommand } from './commands/run-processor';
-import { slackCommand } from './commands/slack';
-import { taskCommand } from './commands/task';
-import { agentCommand } from './commands/agent';
-import { doctorCommand } from './commands/doctor';
+import { ensureConfig } from './shared/utils/config';
+import { configCommand } from './features/config/commands/config';
+import { daemonCommand, runListenerCommand, runProcessorCommand } from './features/daemon';
+import { projectCommand } from './features/project';
+import { slackCommand } from './features/slack';
+import { taskCommand } from './features/github';
+import { agentCommand } from './features/agent';
+import { doctorCommand } from './features/doctor';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { version } = require('../package.json');

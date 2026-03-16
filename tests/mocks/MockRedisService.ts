@@ -1,4 +1,4 @@
-import type { IRedisService } from '../../src/domain/redis';
+import type { IRedisService } from '../../src/shared/domain/redis';
 
 export class MockRedisService implements IRedisService {
   queues = new Map<string, string[]>();

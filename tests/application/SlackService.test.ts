@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { SlackService } from '../../src/application/slack';
+import { SlackService } from '../../src/features/slack/application/SlackService';
 import { MockSlackClient } from '../mocks/MockSlackClient';
 import { MockSlackSocket } from '../mocks/MockSlackSocket';
-import { IncomingSlackMessage } from '../../src/domain/slack';
+import { IncomingSlackMessage } from '../../src/features/slack/domain';
 
 describe('SlackService', () => {
   let client: MockSlackClient;

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { SlackListenerDaemon } from '../../src/application/daemon/SlackListenerDaemon';
-import { SlackService } from '../../src/application/slack/SlackService';
+import { SlackListenerDaemon } from '../../src/features/daemon/application/SlackListenerDaemon';
+import { SlackService } from '../../src/features/slack/application/SlackService';
 import { MockSlackClient } from '../mocks/MockSlackClient';
 import { MockSlackSocket } from '../mocks/MockSlackSocket';
 import { MockRedisService } from '../mocks/MockRedisService';

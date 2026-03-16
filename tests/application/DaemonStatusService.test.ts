@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { DaemonStatusService } from '../../src/application/daemon/DaemonStatusService';
-import { SlackService } from '../../src/application/slack/SlackService';
+import { DaemonStatusService } from '../../src/features/daemon/application/DaemonStatusService';
+import { SlackService } from '../../src/features/slack/application/SlackService';
 import { MockSlackClient } from '../mocks/MockSlackClient';
 import { MockSlackSocket } from '../mocks/MockSlackSocket';
-import { getDaemonShutdownFlagPath } from '../../src/utils/paths';
+import { getDaemonShutdownFlagPath } from '../../src/shared/utils/paths';
 
 // ── fs mock ─────────────────────────────────────────────────────────────────
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { MessageProcessorDaemon } from '../../src/application/daemon/MessageProcessorDaemon';
+import { MessageProcessorDaemon } from '../../src/features/daemon/application/MessageProcessorDaemon';
 import { MockRedisService } from '../mocks/MockRedisService';
 import { MockTmuxService } from '../mocks/MockTmuxService';
 

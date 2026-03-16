@@ -9,7 +9,7 @@ import {
   FileUpload,
   FileResult,
   ThreadReply,
-} from '../../src/domain/slack';
+} from '../../src/features/slack/domain';
 
 export class MockSlackClient implements ISlackClient {
   // ── Recorded calls ─────────────────────────────────────────
