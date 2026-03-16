@@ -1,0 +1,652 @@
+import * as path from 'path';
+import * as fs from 'fs/promises';
+import { resolveProjectName, ensureGitRepo, ensureGitRemote, ensureGitignore, startTmuxSession, generateSessionId } from '../utils/project';
+import * as crypto from 'crypto';
+import { exec as execCb } from 'child_process';
+import { promisify } from 'util';
+import { Command } from 'commander';
+import { SlackService } from '../application/slack/SlackService';
+import { SlackBoltClient } from '../infra/slack/SlackBoltClient';
+import { ProjectService } from '../application/project/ProjectService';
+import { ProjectStatusService } from '../application/project/ProjectStatusService';
+import { LaunchDaemonManager } from '../infra/launchdaemon';
+import { processorLabel } from '../utils/daemon';
+import { DaemonStatusService } from '../application/daemon/DaemonStatusService';
+import { loadConfig } from '../utils/config';
+import { runPreflight } from '../utils/preflight';
+import { GitHubService } from '../infra/github/GitHubService';
+import { RepoManager } from '../application/github/RepoManager';
+import { ProjectManager } from '../application/github/ProjectManager';
+
+const exec = promisify(execCb);
+const svc = new ProjectService();
+const mgr = new LaunchDaemonManager();
+
+export function projectCommand(program: Command): void {
+  const project = program
+    .command('project')
+    .description('Manage projects (Slack channel ↔ tmux session mappings)');
+
+  // ── init ────────────────────────────────────────────────────────────────────
+
+  project
+    .command('init')
+    .description('Initialize a project: create Slack channel, start tmux session, register')
+    .option('--name <name>', 'Project name (default: current directory name)')
+    .option('--session <session>', 'tmux session name (default: project name)')
+    .option('--window <window>', 'tmux window name', 'orchestrator')
+    .option('--users <ids>', 'Comma-separated Slack user IDs to invite (overrides DEV_SQUAD_CORE_MEMBERS)')
+    .option('--repo <owner/repo>', 'GitHub repo (overrides auto-detected remote)')
+    .option('--github-project-number <number>', 'Skip interactive project selection')
+    .option('--local-only', 'Skip GitHub integration entirely')
+    .action(async (opts) => {
+      try {
+        const config = await loadConfig();
+
+        // Preflight: verify all dependencies before running workflow
+        const name: string = opts.name ?? path.basename(process.cwd());
+
+        const preflightOk = await runPreflight(config, { localOnly: !!opts.localOnly, projectName: name });
+        if (!preflightOk) {
+          console.error('Preflight failed — fix the issues above before initializing.');
+          process.exit(1);
+        }
+        const session: string = opts.session ?? name;
+        const window: string = opts.window;
+
+        // Resolve user IDs: --users flag > DEV_SQUAD_CORE_MEMBERS env var
+        const userIds: string[] = opts.users
+          ? opts.users.split(',').map((u: string) => u.trim()).filter(Boolean)
+          : (process.env.DEV_SQUAD_CORE_MEMBERS ?? '')
+              .split(',')
+              .map((u: string) => u.trim())
+              .filter(Boolean);
+
+        console.log(`Initializing project "${name}"...`);
+
+        // 1. Create Slack channel
+        process.stdout.write('  Creating Slack channel... ');
+        const client = new SlackBoltClient(config.slack_bot_token!);
+        const slack = new SlackService(client, null as never);
+        const channel = await slack.ensureChannel(name);
+        console.log(`✓ #${channel.name} (${channel.id})`);
+
+        // 2. Invite users to channel
+        if (userIds.length > 0) {
+          process.stdout.write(`  Inviting ${userIds.length} member(s)... `);
+          await slack.inviteUsers(channel.id, userIds);
+          console.log('✓');
+        }
+
+        // 3. Start tmux session with Claude CLI
+        const claudeSessionId = crypto.randomUUID();
+        process.stdout.write(`  Starting tmux "${session}:${window}"... `);
+        await startTmuxSession(session, window, { sessionId: claudeSessionId });
+        console.log('✓');
+
+        // 4. Ensure git repo exists
+        await ensureGitRepo(process.cwd());
+
+        // 4b. Ensure git remote origin if --repo provided
+        if (opts.repo) {
+          await ensureGitRemote(process.cwd(), opts.repo);
+        }
+
+        // 5. Update .gitignore in cwd
+        await ensureGitignore(process.cwd());
+
+        // 6. Save project
+        const projectConfig = {
+          name,
+          channelId: channel.id,
+          tmuxSession: session,
+          tmuxWindow: window,
+          claudeSessionId,
+        };
+        await svc.add(projectConfig);
+
+        // 7. Post status message to Slack channel
+        process.stdout.write('  Posting status to Slack... ');
+        const statusSvc = new ProjectStatusService(slack);
+        const statusTs = await statusSvc.post(projectConfig);
+        await svc.update(name, { statusMessageTs: statusTs });
+        console.log('✓');
+
+        // 8. GitHub Projects wizard (optional)
+        if (!opts.localOnly) {
+          console.log('\n── GitHub Projects (optional) ──');
+          const github = new GitHubService();
+          const isAuthed = await github.checkAuth();
+          if (!isAuthed) {
+            console.log('  ⚠ gh CLI not authenticated — skipping GitHub integration');
+            console.log('    Run "gh auth login" then re-run "devsquad project init" to link');
+          } else {
+            // Step 1: Repo wizard
+            const repoMgr = new RepoManager(github);
+            const repoResult = await repoMgr.runStep1Wizard(opts.repo);
+
+            if (repoResult.mode === 'github') {
+              // Step 2: Project wizard
+              const projMgr = new ProjectManager(github);
+              const projResult = await projMgr.runStep2Wizard(repoResult.repo);
+
+              // Cache to project config
+              await svc.update(name, {
+                githubProjectId: projResult.project.id,
+                githubProjectUrl: projResult.project.url,
+                githubFieldIds: projResult.fieldIds,
+              });
+              console.log(`  ✓ Linked to GitHub Project: ${projResult.project.title}`);
+              console.log(`    ${projResult.project.url}`);
+            } else {
+              console.log('  ✓ Skipping GitHub integration (local-only mode)');
+            }
+          }
+        }
+
+        // 9. Install + start processor LaunchAgent
+        process.stdout.write('  Starting processor daemon... ');
+        const node = (await exec('which node')).stdout.trim();
+        const bin = (await exec('which devsquad')).stdout.trim();
+        const label = processorLabel(name);
+        await mgr.install({
+          label,
+          program: node,
+          args: [bin, '_run-processor', name],
+          envVars: {
+            PATH: '/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',
+          },
+          keepAlive: true,
+        });
+        await mgr.load(label);
+        console.log('✓');
+
+        // 8. Update daemon status message with new project list
+        process.stdout.write('  Updating daemon status... ');
+        try {
+          const allProjects = await svc.loadAll();
+          const config = await loadConfig();
+          const daemonClient = new SlackBoltClient(config.slack_bot_token!);
+          const daemonSlack = new SlackService(daemonClient, null as never);
+          const daemonSvc = new DaemonStatusService(daemonSlack, config.slack_status_channel ?? 'general');
+          await daemonSvc.update(allProjects.map(p => p.name));
+          console.log('✓');
+        } catch {
+          console.log('(skipped)');
+        }
+
+        console.log('');
+        console.log(`✅ Project "${name}" initialized`);
+        console.log(`   Slack   : #${channel.name} (${channel.id})`);
+        if (userIds.length > 0) console.log(`   Members : ${userIds.join(', ')}`);
+        console.log(`   Tmux    : ${session}:${window}`);
+        console.log(`   Queue   : queue:${name}`);
+        console.log(`   Daemon  : ${label}`);
+      } catch (err: unknown) {
+        console.error('\nError:', err instanceof Error ? err.message : err);
+        process.exit(1);
+      }
+    });
+
+  // ── update (called by Orchestrator) ─────────────────────────────────────────
+
+  project
+    .command('update')
+    .description('Update orchestrator phase and/or current task (called by Gemini Orchestrator)')
+    .option('--name <name>', 'project name (defaults to current directory name if registered)')
+    .option('--phase <phase>', 'Orchestrator phase: Listening|Planning|Delegating|Waiting|Reporting')
+    .option('--task <text>', 'Current task description (use "—" to clear)')
+    .option('--agent <name>', 'Agent name for combined update (use with --agent-status)')
+    .option('--agent-status <status>', 'Agent status for combined update (use with --agent)')
+    .option('--batch', 'Read JSON from stdin: {"phase":"Delegating","task":"...","agents":{"agent-name":"Working"}}')
+    .option('--approve-next', 'Pre-authorize next auto-when-autonomous gate')
+    .option('--issue-id <node-id>', 'Project item node ID for GitHub field updates')
+    .action(async (opts) => {
+      try {
+        const projects = await svc.loadAll();
+        const name = resolveProjectName(opts.name, process.cwd(), projects);
+        const projectConfig = await svc.get(name);
+        if (!projectConfig) {
+          console.error(`Project "${name}" not found`);
+          process.exit(1);
+        }
+
+        const config = await loadConfig();
+        const client = new SlackBoltClient(config.slack_bot_token!);
+        const slack = new SlackService(client, null as never);
+        const statusSvc = new ProjectStatusService(slack);
+
+        // Handle --approve-next flag
+        if (opts.approveNext) {
+          await statusSvc.setApproveNext(projectConfig, true);
+
+          // Append audit log entry
+          const auditEntry = {
+            timestamp: new Date().toISOString(),
+            gate_class: 'auto-when-autonomous',
+            task: opts.task || '—',
+            phase: opts.phase || projectConfig.mode || '—',
+            source: 'approve-next',
+          };
+
+          try {
+            const { getAuditLogPath } = await import('../utils/paths');
+            await fs.mkdir(path.dirname(getAuditLogPath()), { recursive: true });
+            await fs.appendFile(getAuditLogPath(), JSON.stringify(auditEntry) + '\n', 'utf-8');
+          } catch {
+            // Audit log failure is non-fatal
+          }
+
+          console.log(`✓ Next auto-when-autonomous gate pre-authorized`);
+          return;
+        }
+
+        // Handle batch mode
+        if (opts.batch) {
+          // Read JSON from stdin
+          const chunks: string[] = [];
+          for await (const chunk of process.stdin) {
+            chunks.push(chunk);
+          }
+          const batchInput = JSON.parse(chunks.join(''));
+
+          await statusSvc.updateBatch(projectConfig, {
+            phase: batchInput.phase,
+            task: batchInput.task,
+            agents: batchInput.agents,
+          });
+          console.log(`✓ Batch update completed`);
+          return;
+        }
+
+        // Handle agent + agent-status combined update (atomic)
+        if (opts.agent && opts.agentStatus) {
+          await statusSvc.updateSession(projectConfig, {
+            phase: opts.phase as string | undefined,
+            task: opts.task as string | undefined,
+          }, {
+            name: opts.agent,
+            status: opts.agentStatus,
+          });
+          console.log(`✓ Status updated (atomic)`);
+          return;
+        }
+
+        // Standard update
+        await statusSvc.updateSession(projectConfig, {
+          phase: opts.phase as string | undefined,
+          task: opts.task as string | undefined,
+        });
+
+        console.log(`✓ Status updated`);
+
+        // Async GH sync (fail-open)
+        if (projectConfig.githubProjectId && projectConfig.githubFieldIds && opts.issueId) {
+          try {
+            const { GitHubService: GHSvc } = await import('../infra/github/GitHubService');
+            const { TaskManager } = await import('../application/github/TaskManager');
+            const ghSvc = new GHSvc();
+            const taskMgr = new TaskManager(ghSvc);
+            await taskMgr.syncTaskStatus({
+              projectId: projectConfig.githubProjectId,
+              itemId: opts.issueId,
+              fieldIds: projectConfig.githubFieldIds,
+              phase: opts.phase as string | undefined,
+              agentStatus: undefined,
+            });
+            console.log('  ✓ GitHub Project status synced');
+          } catch (err) {
+            console.error('  ⚠ GitHub sync failed (non-fatal):', err instanceof Error ? err.message : err);
+          }
+        }
+      } catch (err: unknown) {
+        console.error('Error:', err instanceof Error ? err.message : err);
+        process.exit(1);
+      }
+    });
+
+  // ── agent (called by Orchestrator) ──────────────────────────────────────────
+
+  project
+    .command('agent')
+    .description('Update an agent status in the project status message (called by Gemini Orchestrator)')
+    .option('--name <name>', 'project name (defaults to current directory name if registered)')
+    .requiredOption('--agent <agent>', 'Agent container name (e.g. agent-claude-lead)')
+    .requiredOption('--status <status>', 'Status: Dead|Standby|Working|Done|Error  (Done auto-reverts to Standby)')
+    .option('--reason <text>', 'Error reason (shown when status is Error)')
+    .action(async (opts) => {
+      try {
+        const projects = await svc.loadAll();
+        const name = resolveProjectName(opts.name, process.cwd(), projects);
+        const projectConfig = await svc.get(name);
+        if (!projectConfig) {
+          console.error(`Project "${name}" not found`);
+          process.exit(1);
+        }
+
+        const config = await loadConfig();
+        const client = new SlackBoltClient(config.slack_bot_token!);
+        const slack = new SlackService(client, null as never);
+        const statusSvc = new ProjectStatusService(slack);
+
+        await statusSvc.updateAgent(projectConfig, opts.agent, opts.status, opts.reason);
+
+        console.log(`✓ ${opts.agent} → ${opts.status}${opts.reason ? ` (${opts.reason})` : ''}`);
+      } catch (err: unknown) {
+        console.error('Error:', err instanceof Error ? err.message : err);
+        process.exit(1);
+      }
+    });
+
+  // ── stop ────────────────────────────────────────────────────────────────────
+
+  project
+    .command('stop')
+    .description('Kill the tmux session and mark project as Offline in Slack')
+    .option('--name <name>', 'Project name (default: current directory name)')
+    .action(async (opts) => {
+      try {
+        const name: string = opts.name ?? require('path').basename(process.cwd());
+        const projectConfig = await svc.get(name);
+        if (!projectConfig) {
+          console.error(`Project "${name}" not found`);
+          process.exit(1);
+        }
+
+        // Gracefully close Claude session before killing tmux
+        process.stdout.write(`  Stopping tmux session "${projectConfig.tmuxSession}"... `);
+        try {
+          // Send Ctrl+D twice to gracefully exit Claude
+          await exec(`tmux send-keys -t "${projectConfig.tmuxSession}" C-d C-d`);
+          await new Promise(r => setTimeout(r, 500));
+          await exec(`tmux kill-session -t "${projectConfig.tmuxSession}"`);
+          console.log('✓');
+        } catch {
+          console.log('(not running)');
+        }
+
+        // Update Slack status to Offline
+        process.stdout.write('  Updating Slack status... ');
+        const config = await loadConfig();
+        const client = new SlackBoltClient(config.slack_bot_token!);
+        const slack = new SlackService(client, null as never);
+        const statusSvc = new ProjectStatusService(slack);
+        await statusSvc.updateSession(projectConfig, { phase: 'Offline', task: '—' });
+        console.log('✓');
+
+        // Unload processor daemon (keep plist so it can be restarted)
+        process.stdout.write('  Stopping processor daemon... ');
+        try {
+          await mgr.unload(processorLabel(name));
+          console.log('✓');
+        } catch {
+          console.log('(skipped)');
+        }
+
+        console.log(`\n✓ Project "${name}" stopped`);
+      } catch (err: unknown) {
+        console.error('Error:', err instanceof Error ? err.message : err);
+        process.exit(1);
+      }
+    });
+
+  // ── resume ──────────────────────────────────────────────────────────────────
+
+  project
+    .command('resume')
+    .description('Resume a stopped project: restart tmux session + processor daemon')
+    .option('--name <name>', 'Project name (default: current directory name)')
+    .option('--window <window>', 'tmux window name (default: project\'s configured window)')
+    .action(async (opts) => {
+      try {
+        const name: string = opts.name ?? require('path').basename(process.cwd());
+        const projectConfig = await svc.get(name);
+        if (!projectConfig) {
+          console.error(`Project "${name}" not found`);
+          process.exit(1);
+        }
+
+        const window = opts.window ?? projectConfig.tmuxWindow;
+
+        // Restart tmux session with Claude CLI (resume previous session if available)
+        process.stdout.write(`  Starting tmux "${projectConfig.tmuxSession}:${window}"... `);
+        if (!projectConfig.claudeSessionId) {
+          // Legacy project without session ID — generate one
+          projectConfig.claudeSessionId = crypto.randomUUID();
+          await svc.update(name, { claudeSessionId: projectConfig.claudeSessionId });
+        }
+
+        // Try to resume with existing session ID, fall back to new session if failed
+        try {
+          await startTmuxSession(projectConfig.tmuxSession, window, {
+            sessionId: projectConfig.claudeSessionId,
+            resume: true,
+          });
+        } catch (err) {
+          // Session not found (Claude was killed abruptly) — generate new session ID
+          if (err instanceof Error && err.message.includes('No conversation found')) {
+            projectConfig.claudeSessionId = crypto.randomUUID();
+            await svc.update(name, { claudeSessionId: projectConfig.claudeSessionId });
+            await startTmuxSession(projectConfig.tmuxSession, window, {
+              sessionId: projectConfig.claudeSessionId,
+              resume: false,
+            });
+          } else {
+            throw err;
+          }
+        }
+        console.log('✓');
+
+        // Reload processor daemon
+        process.stdout.write('  Starting processor daemon... ');
+        await mgr.load(processorLabel(name));
+        console.log('✓');
+
+        // Update Slack status
+        process.stdout.write('  Updating Slack status... ');
+        const config = await loadConfig();
+        const client = new SlackBoltClient(config.slack_bot_token!);
+        const slack = new SlackService(client, null as never);
+        const statusSvc = new ProjectStatusService(slack);
+        await statusSvc.updateSession(projectConfig, { phase: 'Listening', task: '—' });
+        console.log('✓');
+
+        console.log(`\n✓ Project "${name}" resumed`);
+      } catch (err: unknown) {
+        console.error('Error:', err instanceof Error ? err.message : err);
+        process.exit(1);
+      }
+    });
+
+  // ── add ─────────────────────────────────────────────────────────────────────
+
+  project
+    .command('add')
+    .description('Manually register a project (no channel/session creation)')
+    .requiredOption('--name <name>', 'Project name (used as queue key)')
+    .requiredOption('--channel <id>', 'Slack channel ID (e.g. C0AK5K4QGNA)')
+    .requiredOption('--session <session>', 'tmux session name')
+    .requiredOption('--window <window>', 'tmux window name')
+    .action(async (opts) => {
+      try {
+        await svc.add({
+          name: opts.name,
+          channelId: opts.channel,
+          tmuxSession: opts.session,
+          tmuxWindow: opts.window,
+        });
+        console.log(`✓ Project "${opts.name}" added`);
+      } catch (err: unknown) {
+        console.error('Error:', err instanceof Error ? err.message : err);
+        process.exit(1);
+      }
+    });
+
+  // ── remove ───────────────────────────────────────────────────────────────────
+
+  project
+    .command('remove')
+    .description('Remove a project and clean up tmux session and Slack status')
+    .requiredOption('--name <name>', 'Project name')
+    .action(async (opts) => {
+      try {
+        const projectConfig = await svc.get(opts.name);
+        if (!projectConfig) {
+          console.error(`Project "${opts.name}" not found`);
+          process.exit(1);
+        }
+
+        // Kill tmux session
+        process.stdout.write(`  Stopping tmux session "${projectConfig.tmuxSession}"... `);
+        try {
+          await exec(`tmux kill-session -t "${projectConfig.tmuxSession}"`);
+          console.log('✓');
+        } catch {
+          console.log('(not running)');
+        }
+
+        // Archive Slack channel + remove state file
+        process.stdout.write('  Archiving Slack channel... ');
+        try {
+          const config = await loadConfig();
+          const client = new SlackBoltClient(config.slack_bot_token!);
+          const slack = new SlackService(client, null as never);
+          const statusSvc = new ProjectStatusService(slack);
+          await statusSvc.removeState(opts.name);
+          await slack.archiveChannel(projectConfig.channelId);
+          console.log('✓');
+        } catch {
+          console.log('(skipped)');
+        }
+
+        // Unload + remove processor daemon
+        process.stdout.write('  Removing processor daemon... ');
+        try {
+          await mgr.remove(processorLabel(opts.name));
+          console.log('✓');
+        } catch {
+          console.log('(skipped)');
+        }
+
+        // Remove from registry
+        await svc.remove(opts.name);
+
+        // Delete processor log file
+        process.stdout.write('  Deleting processor log... ');
+        try {
+          const { getLogPath } = await import('../utils/paths');
+          await fs.unlink(getLogPath(processorLabel(opts.name)));
+          console.log('✓');
+        } catch {
+          console.log('(not found)');
+        }
+
+        // Update daemon status message with remaining projects
+        process.stdout.write('  Updating daemon status... ');
+        try {
+          const remaining = await svc.loadAll();
+          const config = await loadConfig();
+          const daemonClient = new SlackBoltClient(config.slack_bot_token!);
+          const daemonSlack = new SlackService(daemonClient, null as never);
+          const daemonSvc = new DaemonStatusService(daemonSlack, config.slack_status_channel ?? 'general');
+          await daemonSvc.update(remaining.map(p => p.name));
+          console.log('✓');
+        } catch {
+          console.log('(skipped)');
+        }
+
+        console.log(`\n✓ Project "${opts.name}" removed`);
+      } catch (err: unknown) {
+        console.error('Error:', err instanceof Error ? err.message : err);
+        process.exit(1);
+      }
+    });
+
+  // ── list ─────────────────────────────────────────────────────────────────────
+
+  project
+    .command('config')
+    .description('Show config and state for a project (reads ~/.devsquad files)')
+    .option('--name <name>', 'Project name (default: current directory name)')
+    .action(async (opts) => {
+      const { getProjectsPath, getProjectStatusPath } = await import('../utils/paths');
+      const { readFile } = await import('fs/promises');
+
+      const name: string = opts.name ?? require('path').basename(process.cwd());
+      const projectsRaw = await readFile(getProjectsPath(), 'utf-8').catch(() => '[]');
+      const projects: Array<Record<string, unknown>> = JSON.parse(projectsRaw);
+      const p = projects.find(x => x['name'] === name);
+      if (!p) {
+        console.error(`Project "${name}" not found in projects.json`);
+        process.exit(1);
+      }
+
+      console.log('\n── Project config (' + getProjectsPath() + ') ──');
+      console.log(JSON.stringify(p, null, 2));
+
+      const statePath = getProjectStatusPath(name);
+      const stateRaw = await readFile(statePath, 'utf-8').catch(() => null);
+      if (stateRaw) {
+        console.log('\n── Project state (' + statePath + ') ──');
+        console.log(JSON.stringify(JSON.parse(stateRaw), null, 2));
+      } else {
+        console.log('\n── Project state ──\n(no state file found)');
+      }
+    });
+
+  project
+    .command('list')
+    .description('List all registered projects')
+    .action(async () => {
+      const projects = await svc.loadAll();
+
+      if (projects.length === 0) {
+        console.log('No projects registered. Use: devsquad project init');
+        return;
+      }
+
+      console.log(`${'Name'.padEnd(20)} ${'Channel'.padEnd(14)} Tmux Target`);
+      console.log(`${'-'.repeat(20)} ${'-'.repeat(14)} ${'-'.repeat(30)}`);
+      for (const p of projects) {
+        console.log(`${p.name.padEnd(20)} ${p.channelId.padEnd(14)} ${p.tmuxSession}:${p.tmuxWindow}`);
+      }
+    });
+
+  // ── set-mode ─────────────────────────────────────────────────────────────────
+
+  project
+    .command('set-mode')
+    .description('Set project gate mode (autonomous or supervised)')
+    .option('--mode <mode>', 'Mode: autonomous or supervised')
+    .option('--name <name>', 'Project name (default: current directory name)')
+    .action(async (opts) => {
+      try {
+        if (!opts.mode) {
+          console.error('Error: --mode is required');
+          process.exit(1);
+        }
+
+        if (opts.mode !== 'autonomous' && opts.mode !== 'supervised') {
+          console.error(`Error: Invalid mode "${opts.mode}". Must be "autonomous" or "supervised".`);
+          process.exit(1);
+        }
+
+        const projects = await svc.loadAll();
+        const name = resolveProjectName(opts.name, process.cwd(), projects);
+        const projectConfig = await svc.get(name);
+        if (!projectConfig) {
+          console.error(`Project "${name}" not found`);
+          process.exit(1);
+        }
+
+        await svc.update(name, { mode: opts.mode });
+        console.log(`✓ Project "${name}" mode set to ${opts.mode}`);
+      } catch (err: unknown) {
+        console.error('Error:', err instanceof Error ? err.message : err);
+        process.exit(1);
+      }
+    });
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+

@@ -1,0 +1,4 @@
+node_modules
+dist
+# devsquad — orchestrator runtime files
+session/
