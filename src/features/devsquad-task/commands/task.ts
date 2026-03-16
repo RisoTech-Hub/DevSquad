@@ -113,9 +113,8 @@ export async function runTaskBriefCommand(options: TaskBriefOptions): Promise<vo
   // Create GitHub Issue (fail-open)
   if (options.title && !options.localOnly) {
     try {
-      const { GitHubService } = await import('../infra/GitHubService');
-      const { TaskManager } = await import('../application/TaskManager');
-      const { ProjectService, resolveProjectName } = await import('../../project');
+      const { GitHubService, TaskManager } = await import('../../github');
+      const { ProjectService, resolveProjectName } = await import('../../devsquad-project');
 
       const github = new GitHubService();
       const isAuthed = await github.checkAuth();

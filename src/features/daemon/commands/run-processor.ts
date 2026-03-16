@@ -1,7 +1,7 @@
 import { RedisService } from '../../../shared/infra/redis/RedisService';
 import { TmuxService } from '../../../shared/infra/tmux/TmuxService';
 import { MessageProcessorDaemon } from '../application/MessageProcessorDaemon';
-import { ProjectService, ProjectStatusService } from '../../project';
+import { ProjectService, ProjectStatusService } from '../../devsquad-project';
 import { createSlackClient } from '../../slack';
 import { loadConfig } from '../../../shared/utils/config';
 

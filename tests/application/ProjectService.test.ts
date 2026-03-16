@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ProjectService } from '../../src/features/project/application/ProjectService';
+import { ProjectService } from '../../src/features/devsquad-project/application/ProjectService';
 
 // ── fs mock ───────────────────────────────────────────────────────────────────
 

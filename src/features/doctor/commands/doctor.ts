@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import { DoctorService, GroupedResults } from '../application/DoctorService';
 import { DoctorFormatter } from '../application/DoctorFormatter';
 import { Check } from '../domain/types';
-import { ProjectService } from '../../project';
+import { ProjectService } from '../../devsquad-project';
 import {
   ConfigFileCheck,
   SlackTokenCheck,

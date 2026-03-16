@@ -5,7 +5,7 @@ import { DaemonStatusService } from '../application/DaemonStatusService';
 import { TeamStatusService } from '../application/TeamStatusService';
 import { AgentRegistryService } from '../../agent';
 import { DockerService } from '../../../shared/infra/docker/DockerService';
-import { ProjectService } from '../../project';
+import { ProjectService } from '../../devsquad-project';
 import { loadConfig } from '../../../shared/utils/config';
 
 const PROJECT_RELOAD_INTERVAL_MS = 10_000;

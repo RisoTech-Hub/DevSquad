@@ -3,7 +3,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { SlackService } from '../application/SlackService';
 import { SlackBoltClient } from '../infra/SlackBoltClient';
-import { ProjectService } from '../../project';
+import { ProjectService } from '../../devsquad-project';
 import { loadConfig } from '../../../shared/utils/config';
 
 function buildSlack(botToken: string): SlackService {

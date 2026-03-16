@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { Check, CheckContext, CheckResult } from '../domain/types';
-import type { ProjectConfig } from '../../project';
+import type { ProjectConfig } from '../../devsquad-project';
 import { ProjectEntryCheck, TmuxSessionCheck, ProcessorPlistCheck, ProcessorStateCheck } from './checks/ProjectChecks';
 import { GitignoreCheck } from './checks/WorkspaceChecks';
 

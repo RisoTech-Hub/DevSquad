@@ -1,6 +1,6 @@
 import * as fs from 'fs/promises';
 import { Check, CheckResult, CheckContext } from '../../domain/types';
-import { ensureGitignore, GITIGNORE_ENTRIES } from '../../../project';
+import { ensureGitignore, GITIGNORE_ENTRIES } from '../../../devsquad-project';
 
 export class GitignoreCheck implements Check {
   name = 'Gitignore';

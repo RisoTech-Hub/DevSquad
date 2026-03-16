@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { LaunchDaemonManager } from '../infra/LaunchDaemonManager';
-import { ProjectService } from '../../project';
+import { ProjectService } from '../../devsquad-project';
 import { getLogPath } from '../../../shared/utils/paths';
 import { createReadStream } from 'fs';
 import { exec as execCb } from 'child_process';

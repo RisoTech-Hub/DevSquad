@@ -2,11 +2,12 @@ import { Command } from 'commander';
 import { ensureConfig } from './shared/utils/config';
 import { configCommand } from './features/config/commands/config';
 import { daemonCommand, runListenerCommand, runProcessorCommand } from './features/daemon';
-import { projectCommand } from './features/project';
+import { projectCommand } from './features/devsquad-project';
 import { slackCommand } from './features/slack';
-import { taskCommand } from './features/github';
+import { taskCommand } from './features/devsquad-task';
 import { agentCommand } from './features/agent';
 import { doctorCommand } from './features/doctor';
+import { githubCommand } from './features/github';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { version } = require('../package.json');
@@ -36,6 +37,7 @@ async function main(): Promise<void> {
   slackCommand(program);
   taskCommand(program);
   doctorCommand(program);
+  githubCommand(program);
 
   program
     .command('_run-listener')

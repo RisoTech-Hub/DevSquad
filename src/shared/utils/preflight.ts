@@ -3,7 +3,7 @@ import { promisify } from 'util';
 import { DevsquadConfig } from './config';
 import { SlackBoltClient } from '../../features/slack/infra/SlackBoltClient';
 import { RedisService } from '../infra/redis/RedisService';
-import { ProjectService } from '../../features/project/application/ProjectService';
+import { ProjectService } from '../../features/devsquad-project/application/ProjectService';
 
 const exec = promisify(execCb);
 

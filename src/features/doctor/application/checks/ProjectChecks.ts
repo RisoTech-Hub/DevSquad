@@ -2,8 +2,8 @@ import * as fs from 'fs/promises';
 import { exec as execCb } from 'child_process';
 import { promisify } from 'util';
 import { Check, CheckResult, CheckContext } from '../../domain/types';
-import { ProjectService, startTmuxSession, generateSessionId } from '../../../project';
-import type { ProjectConfig } from '../../../project';
+import { ProjectService, startTmuxSession, generateSessionId } from '../../../devsquad-project';
+import type { ProjectConfig } from '../../../devsquad-project';
 import { getPlistPath } from '../../../../shared/utils/paths';
 import { createLaunchDaemonManager, processorLabel, getNodeBin, getDevsquadBin } from '../../../daemon';
 
